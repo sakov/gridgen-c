@@ -7,7 +7,7 @@ and `libgridgen.so'.
 
 `gridgen' is a free software. See LICENSE for details.
 
-Please send comments and bugs to pavel.sakov@nersc.no .
+Please send comments and bugs to pavel.sakov<at>gmail.com .
 
 1. Build and install
 
@@ -116,9 +116,7 @@ what it can do and what it can not.
   6. Shamos-Hoey algorithm implementation by softSurfer -- for testing a 
      polyline on self-intersections.
 
-Please acknowledge the use of this software in publications, e.g.:
-"<We, this study, ...> used orthogonal grid generation code "gridgen" version
-<version number> written by Pavel Sakov."
+Please acknowledge the use of this software in publications.
 
 Good luck!
 Pavel Sakov
