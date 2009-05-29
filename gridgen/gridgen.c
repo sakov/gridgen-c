@@ -1591,13 +1591,13 @@ static void calculate_zs(int nq, quadrilateral qs[], int nz, zdouble zs[], int q
 
     for (i = 0; i < q->nneighbours; ++i) {
         int nid = q->neighbours[i];
-	int vid;
+        int vid;
 
         if (done[nid])
             continue;
 
-	vid = find_newvertex(nq, qs, nid, qindex);
-	calculate_zs(nq, qs, nz, zs, nid, vid, sc, w, count, done, A, B);
+        vid = find_newvertex(nq, qs, nid, qindex);
+        calculate_zs(nq, qs, nz, zs, nid, vid, sc, w, count, done, A, B);
     }
 }
 
