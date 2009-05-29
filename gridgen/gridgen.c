@@ -373,7 +373,7 @@ void gridgen_printhelpprm(void)
     printf("    3. `SCPACK' by Lloyd N. Trefethen -- for Schwarz-Christoffel transform.\n");
     printf("    4. `DOPRI8' by E. Hairer, S.P. Norsett, G. Wanner -- for solving ODEs.\n");
     printf("    5. Shamos-Hoey algorithm implementation by softSurfer -- for testing a\n");
-    printf("       polyline on self-intersections.\n");
+    printf("       polyline for self-intersections.\n");
     printf("\n");
     printf("  Good luck!\n");
     printf("\n");
