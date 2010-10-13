@@ -1,6 +1,6 @@
 gridgen
 Orthogonal Grid Generator
-Version 1.46
+Version 1.47
 
 Provides orthogonal grid generation utility `gridgen'.
 
@@ -87,7 +87,7 @@ what it can do and what it can not.
      Scwartz-Christoffel transform. To generate a smoother grid, for a section
      of the boundary without corners (which will become a strait line in the 
      grid space), try to make the polygon section smoother; using a few smaller
-     turns instead of one sharp turn; or move the boundary polyline a away from
+     turns instead of one sharp turn; or move the boundary polyline away from
      the water. Try to make the angles in the boundary polyline at the location
      of designated grid corners close to the right angle.
 
