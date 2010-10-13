@@ -696,7 +696,7 @@ static gridgen* gridgen_create(char* prmfname)
         gg->frect = gg_fopen(buf, "w");
     }
 
-    if (prm_read(prmfname, prm, "ppe", buf))
+    if (prm_read(prmfname, prm, "nppe", buf))
         gg->nppe = atoi(buf);
     gg->nppq = gg->nppe * 4 + 5;
 

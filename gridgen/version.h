@@ -18,6 +18,6 @@
 #if !defined(_VERSION_H)
 #define _VERSION_H
 
-static char* gridgen_version = "1.46";
+static char* gridgen_version = "1.47";
 
 #endif
