@@ -134,7 +134,7 @@ static void imtql2(int n, double* d, double* e, double* z)
 
     for (l = 0; l < n; ++l) {
         int j = 0;
-        int m, mml;
+        int m;
 
         while (1) {
             for (m = l; m < nm1; ++m)
@@ -156,7 +156,6 @@ static void imtql2(int n, double* d, double* e, double* z)
             s = 1.0;
             c = 1.0;
             p = 0.0;
-            mml = m - l;
 
             for (i = m - 1; i >= l; --i) {
                 f = s * e[i];

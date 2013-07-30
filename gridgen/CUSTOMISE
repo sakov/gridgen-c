@@ -27,7 +27,7 @@ fi
 
 # C compiler flags
 if [ -z "$CFLAGS" ]; then
-  CFLAGS="-g -O2 -Wall"
+  CFLAGS="-g -O2 -Wall -DANSI_DECLARATORS"
 fi
 
 CFLAGS_TRIANGLE="$CFLAGS -w -ffloat-store"
