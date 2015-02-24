@@ -65,11 +65,11 @@ what it can do and what it can not.
         points at the file that contains node coordinates in index space scaled
         to 1x1 square. Two examples of using this technique may be seen at
 
-        http://docs.google.com/gb?export=download&id=F.8459b230-8260-433a-9f52-d63670ae317c
+        https://gridgen-c.googlecode.com/files/fitzroy.pdf
 
         (note elongated cells in the river); and
 
-	http://docs.google.com/gb?export=download&id=F.22d1155f-66b7-4881-9a21-ff14f31a383d
+	https://gridgen-c.googlecode.com/files/torres.pdf
 
         (note the elongated cells in the narrowing).
 
