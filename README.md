@@ -21,3 +21,5 @@ suite for interactive grid generation for ROMS and GETM - and [pygridgen](https:
 
 Checkout **gridgen** by running `git clone https://github.com/sakov/gridgen-c`
 or `svn checkout https://github.com/sakov/gridgen-c`.
+
+![Example grid: Fitzroy estuary](fitzroy-portrait.pdf)
