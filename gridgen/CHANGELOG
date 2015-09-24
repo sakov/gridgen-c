@@ -1,3 +1,7 @@
+v. 1.50, 25 September 2015
+        -- Minor changes to makefile.in: added $(LDFLAGS) for target
+           `libgridgen.so' (thanks to @ocefpaf for pointing), and removed
+           target `dist'
 v. 1.49, 31 July 2013
 	-- Cosmetic changes to eliminate warnings from gcc 4.7.2
 v. 1.48, 1 May 2012

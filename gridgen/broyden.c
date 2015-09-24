@@ -30,7 +30,7 @@
  * Broyden method:
  *   xnew = x + W f
  *   fnew = F(xnew)
- *   Wnew = W - (W fnew) (s^T W) / s^T W (fnew - f),
+ *   Wnew = W - (W fnew) (s^T W) / (s^T W (fnew - f)),
  * where
  *   s = xnew - x (= Wf)
  */

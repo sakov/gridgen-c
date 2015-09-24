@@ -115,7 +115,7 @@ libgridgen.a: $(HEADERS) triangle.o $(LIBOBJS)
 
 libgridgen.so: $(HEADERS) triangle.t $(SHLIBOBJS)
 	rm -f $@
-	$(CC) -shared -o $@ $(SHLIBOBJS) triangle.t $(LIBS)
+	$(CC) -shared -o $@ $(SHLIBOBJS) triangle.t $(LDFLAGS) $(LIBS)
 
 triangle.o: triangle.c
 	$(CC) -c -DTRILIBRARY $(CFLAGS_TRIANGLE) -I. triangle.c
@@ -154,31 +154,3 @@ distclean: clean configclean
 indent:
 	indent -T FILE -T swcr -T vertnode -T vertlist -T edge -T quadrilateral -T gridgen -T odestruct -T calcstruct -T zdouble -T point -T delaunay -T istack -T triangle -T DIRECTION -T endpoint -T endpointtqueue -T slseg -T segnode -T sweepline  -T DIRECTION -T VISIT -T SIBLING_ORDER -T NODETYPE -T ht_bucket -T hashtable main.c $(SRC) $(HEADERS)
 	rm -f *~
-
-dist:
-	WDIR=`pwd`;\
-	DIR=`basename $$WDIR`;\
-	cp -r $$WDIR /tmp;\
-	cd /tmp/$$DIR/examples;\
-	make clean;\
-	cd /tmp/$$DIR;\
-	rm -rf `find /tmp/$$DIR -name CVS`;\
-	if [ -e makefile ] ; then\
-		make distclean;\
-	fi;\
-	/tmp/"$$DIR"/configure;\
-	make standalone;\
-	chmod a+r+x gridgen;\
-	chmod a+r+x issimplepoly;\
-	mv -f gridgen $(DISTDIR);\
-	mv -f issimplepoly $(DISTDIR);\
-	make distclean;\
-	cd $(DISTDIR);\
-	mv -f $$DIR".tar.gz" $$DIR".tar.gz.prev";\
-	gzip -f gridgen;\
-	gzip -f issimplepoly;\
-	cd /tmp;\
-	tar czvf $$DIR".tar.gz" $$DIR;\
-	chmod a+r $$DIR".tar.gz";\
-	mv -f $$DIR".tar.gz" $(DISTDIR)/$$DIR".tar.gz";\
-	rm -rf $$DIR
