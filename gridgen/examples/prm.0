@@ -7,4 +7,3 @@ precision 1.0e-12
 newton 1
 rectangle rect.0
 sigmas sigmas.0
-geographic 10 20
