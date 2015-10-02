@@ -71,6 +71,7 @@
 #define NPPE_DEF 3              /* number of points per internal edge in
                                  * polygon images */
 #define ZZERO 0.0 + 0.0 * I
+#define DEG2RAD (M_PI / 180.0)
 
 int gg_verbose = 0;
 int tr_verbose = 0;
@@ -90,6 +91,18 @@ typedef struct {
     int nneighbours;
     int* neighbours;
 } quadrilateral;
+
+/*
+ * parameters of the stereographic projection used
+ */
+typedef struct {
+    double phi;
+    double theta;
+    double cosphi;
+    double sinphi;
+    double costheta;
+    double sintheta;
+} sgproj;
 
 typedef struct {
     char* prmfname;
@@ -114,6 +127,8 @@ typedef struct {
     int thin;
     int checksimplepoly;
     int reversed;
+
+    sgproj* proj;
 
     int nx;
     int ny;
@@ -324,6 +339,7 @@ void gridgen_printhelpprm(void)
     printf("    [sigmas <intermediate backup file>]\n");
     printf("    [rectangle <output image polygon file>]\n");
     printf("    [nppe <number of points per internal edge>] (3)\n");
+    printf("    [geographic <lon0> <lat0>]\n");
     printf("  Input polygon data file format:\n");
     printf("    <x_1> <y_1> [<beta_1>[*]]\n");
     printf("    <x_2> <y_2> [<beta_2>[*]]\n");
@@ -366,6 +382,11 @@ void gridgen_printhelpprm(void)
     printf("       Large values can take some time; small values can lead to failing\n");
     printf("       to map some points in difficult cases when the images of quadrilaterals\n");
     printf("       are strongly distorted.\n");
+    printf("    10.Entry `geographic <lon0> <lat0>' tells gridgen that the input\n");
+    printf("       coordinates are given in (lon,lat). It will then internally transform\n");
+    printf("       the boundary to (x,y) using stereographic projection with the south pole\n");
+    printf("       placed at (<lon0>,<lat0>), generate grid, and transform grid node\n");
+    printf("       coordinates back to (lon,lat).\n");
     printf("  Acknowledgments. This program uses the following public code/algorithms:\n");
     printf("    1. CRDT algorithm by Tobin D. Driscoll and Stephen A. Vavasis -- for\n");
     printf("       conformal mapping.\n");
@@ -387,10 +408,11 @@ static void quit(char* format, ...)
 
     fflush(stdout);
 
-    fprintf(stderr, "error: ");
+    fprintf(stderr, "\n\n  gridgen: error: ");
     va_start(args, format);
     vfprintf(stderr, format, args);
     va_end(args);
+    fprintf(stderr, "\n\n");
     exit(1);
 }
 
@@ -399,7 +421,7 @@ static FILE* gg_fopen(char* fname, char* mode)
     FILE* f = fopen(fname, mode);
 
     if (f == NULL)
-        quit("could not open \"%s\" in \"%s\" mode: %s\n", fname, mode, strerror(errno));
+        quit("could not open \"%s\" in \"%s\" mode: %s", fname, mode, strerror(errno));
 
     return f;
 }
@@ -421,7 +443,7 @@ static int key_find(char* fname, FILE* fp, char* key)
             if (!rewound) {
                 fpos = 0;
                 if (fseek(fp, fpos, 0))
-                    quit("%s: could not rewind: %s\n", fname, strerror(errno));
+                    quit("%s: could not rewind: %s", fname, strerror(errno));
                 s = fgets(buf, BUFSIZE, fp);
                 rewound = 1;
             } else
@@ -442,7 +464,7 @@ static int key_find(char* fname, FILE* fp, char* key)
         return 0;
 
     if (fseek(fp, fpos + (s - buf) + len, 0))
-        quit("%s: no characters found after \"%s\"\n", fname, key);
+        quit("%s: no characters found after \"%s\"", fname, key);
 
     return 1;
 }
@@ -459,7 +481,7 @@ static int prm_read(char* fname, FILE* fp, char* key, char* p)
         return 0;
 
     if (fgets(line, BUFSIZE, fp) != line)
-        quit("%s: key \"%s\": read failed: %s\n", fname, key, strerror(errno));
+        quit("%s: key \"%s\": read failed: %s", fname, key, strerror(errno));
 
     for (s = line; *s && isspace(*s); s++);
 
@@ -469,6 +491,25 @@ static int prm_read(char* fname, FILE* fp, char* key, char* p)
 
     if (gg_verbose)
         fprintf(stderr, "-> %s = \"%s\"\n", key, p);
+
+    return 1;
+}
+
+static int str2double(char* token, double* value)
+{
+    char* end = NULL;
+
+    if (token == NULL) {
+        *value = NaN;
+        return 0;
+    }
+
+    *value = strtod(token, &end);
+
+    if (end == token) {
+        *value = NaN;
+        return 0;
+    }
 
     return 1;
 }
@@ -497,6 +538,7 @@ static gridgen* gridgen_init(void)
     gg->thin = THIN_DEF;
     gg->checksimplepoly = CHECKSIMPLEPOLY_DEF;
     gg->reversed = 0;
+    gg->proj = NULL;
     gg->nx = -1;
     gg->ny = -1;
     gg->ngridpoints = 0;
@@ -540,6 +582,38 @@ static gridgen* gridgen_init(void)
     return gg;
 }
 
+static void ll2xy(sgproj * proj, double lon, double lat, double* x, double* y)
+{
+    double phi = lon * DEG2RAD;
+    double theta = lat * DEG2RAD;
+    double costheta = cos(theta);
+    double sintheta = sin(theta);
+    double k = 2.0 / (1.0 + proj->sintheta * sintheta + proj->costheta * costheta * cos(phi - proj->phi));
+
+    *x = k * costheta * sin(phi - proj->phi);
+    *y = k * (sintheta * proj->costheta - costheta * proj->sintheta * cos(phi - proj->phi));
+}
+
+static void xy2ll(sgproj * proj, double x, double y, double* lon, double* lat)
+{
+    double rho = hypot(x, y);
+    double c = 2.0 * atan(rho / 2.0);
+    double cosc = cos(c);
+    double sinc = sin(c);
+    double phi, theta;
+
+    phi = proj->phi + atan2(x * sinc, rho * cosc * proj->costheta - y * sinc * proj->sintheta);
+    phi /= DEG2RAD;
+    if (phi <= -180.0)
+        phi += 360.0;
+    else if (phi > 180.0)
+        phi -= 360.0;
+    theta = asin(cosc * proj->sintheta + y * sinc * proj->costheta / rho);
+
+    *lon = phi;
+    *lat = theta / DEG2RAD;
+}
+
 static gridgen* gridgen_create(char* prmfname)
 {
     gridgen* gg = gridgen_init();
@@ -554,22 +628,72 @@ static gridgen* gridgen_create(char* prmfname)
     gg->vertices = vertlist_create();
 
     if (!prm_read(prmfname, prm, "input", buf))
-        quit("%s: key \"input\" not found\n", prmfname);
+        quit("%s: key \"input\" not found", prmfname);
     gg->datafname = strdup(buf);
     data = gg_fopen(buf, "r");
+
+    if (prm_read(prmfname, prm, "geographic", buf)) {
+        char seps[] = " =\t";
+        char* token = NULL;
+        sgproj* proj = NULL;
+
+        gg->proj = calloc(1, sizeof(sgproj));
+        proj = gg->proj;
+        if ((token = strtok(buf, seps)) == NULL)
+            quit("%s: <lon0> is not defined after \"geographic\"", prmfname);
+        if (!str2double(token, &proj->phi))
+            quit("%s: could not convert \"%s\" to double", prmfname, token);
+        if ((token = strtok(NULL, seps)) == NULL)
+            quit("%s: <lat0> is not defined after \"geographic\"", prmfname);
+        if (!str2double(token, &proj->theta))
+            quit("%s: could not convert \"%s\" to double", prmfname, token);
+        fprintf(stderr, "  going to use internally stereographic projection\n");
+        fprintf(stderr, "  with the South Pole at (lon,lat) = (%.3g,%.3g)\n", proj->phi, proj->theta);
+        /*
+         * we will actually use the North Pole coordinates in transformations
+         */
+        proj->phi += 180.0;
+        if (proj->phi > 180.0)
+            proj->phi -= 360.0;
+        proj->theta = 180.0 - proj->theta;
+        proj->phi *= DEG2RAD;
+        proj->theta *= DEG2RAD;
+        proj->cosphi = cos(proj->phi);
+        proj->sinphi = sin(proj->phi);
+        proj->costheta = cos(proj->theta);
+        proj->sintheta = sin(proj->theta);
+    }
 
     if (gg_verbose)
         fprintf(stderr, "reading:\n");
     vertlist_read(gg->vertices, data);
 
+    if (gg->proj != NULL) {
+        double* x = NULL;
+        double* y = NULL;
+        int i;
+
+        vertlist_find_minmax(gg->vertices, &gg->xmin, &gg->xmax, &gg->ymin, &gg->ymax);
+
+        if (gg->xmin <= -180.0 || gg->xmin > 180.0 || gg->ymin < -90. || gg->ymin > 90.0)
+            quit("geographic coordinates must be in range -180 < lon <= 180; -90 <= lat <= 90");
+
+        vertlist_toxy(gg->vertices, &x, &y);
+        for (i = 0; i < gg->vertices->n; ++i)
+            ll2xy(gg->proj, x[i], y[i], &x[i], &y[i]);
+        vertlist_fromxy(gg->vertices, x, y);
+        free(x);
+        free(y);
+    }
+
     if (gg->vertices->n == 0)
-        quit("%s: no XY points found\n", buf);
+        quit("%s: no XY points found", buf);
     if (gg->vertices->n < NMIN)
-        quit("%s: %d points found -- too few (should be >= %d)\n", buf, gg->vertices->n, NMIN);
+        quit("%s: %d points found -- too few (should be >= %d)", buf, gg->vertices->n, NMIN);
     if (gg->vertices->n > NMAX)
-        quit("%s: %d points found -- too many (should be <= %d)\n", buf, gg->vertices->n, NMAX);
+        quit("%s: %d points found -- too many (should be <= %d)", buf, gg->vertices->n, NMAX);
     if (gg_verbose)
-        fprintf(stderr, "  %d vertices after read\n", gg->vertices->n);
+        fprintf(stderr, "  %d vertices after read", gg->vertices->n);
 
     if (gg_verbose > 1)
         vertlist_print(gg->vertices, stderr);
@@ -594,7 +718,7 @@ static gridgen* gridgen_create(char* prmfname)
         vertlist_thin(gg->vertices, (gg->xmax - gg->xmin) / BIGDOUBLE, (gg->ymax - gg->ymin) / BIGDOUBLE);
 
         if (gg->vertices->n < NMIN)
-            quit("%s: %d vertices after thinning -- too little (should be >= %d)\n", buf, gg->vertices->n, NMIN);
+            quit("%s: %d vertices after thinning -- too little (should be >= %d)", buf, gg->vertices->n, NMIN);
 
         if (gg_verbose)
             fprintf(stderr, "  %d vertices after thinning\n", gg->vertices->n);
@@ -614,7 +738,7 @@ static gridgen* gridgen_create(char* prmfname)
             fprintf(stderr, "  stage. You may try to skip the test by adding parameter \"checksimplepoly 0\"\n");
             fprintf(stderr, "  to your paremeter file. (If true, you should get a segfault during\n");
             fprintf(stderr, "  triangulation.)\n");
-            quit("%s: not a simple polyline\n", gg->datafname);
+            quit("%s: not a simple polyline", gg->datafname);
         }
         free(x);
         free(y);
@@ -630,7 +754,7 @@ static gridgen* gridgen_create(char* prmfname)
     if (gg->nnodes > NNODES_MAX)
         gg->nnodes = NNODES_MAX;
     if (gg_verbose)
-        fprintf(stderr, "nnodes = %d\n", gg->nnodes);
+        fprintf(stderr, "  nnodes = %d\n", gg->nnodes);
 
     if (prm_read(prmfname, prm, "newton", buf))
         gg->newton = atoi(buf);
@@ -642,14 +766,14 @@ static gridgen* gridgen_create(char* prmfname)
     if (gg->eps > EPS_MAX)
         gg->eps = EPS_MAX;
     if (gg_verbose)
-        fprintf(stderr, "precision = %3g\n", gg->eps);
+        fprintf(stderr, "  precision = %3g\n", gg->eps);
 
     if (prm_read(prmfname, prm, "grid", buf)) {
         FILE* gridfile = gg_fopen(buf, "r");
         vertlist* l = vertlist_create();
 
         if (gridfile == NULL)
-            quit("could not open \"%s\": %s\n", buf, strerror(errno));
+            quit("could not open \"%s\": %s", buf, strerror(errno));
 
         vertlist_read(l, gridfile);
         gg->gridpoints = vertlist_tozdouble(l);
@@ -721,9 +845,9 @@ static gridgen* gridgen_create2(int nbdry, double xbdry[], double ybdry[], doubl
     vertlist_setfirstnode(gg->vertices, ul);
 
     if (gg->vertices->n < NMIN)
-        quit("%d points found -- too few (should be >= %d)\n", gg->vertices->n, NMIN);
+        quit("%d points found -- too few (should be >= %d)", gg->vertices->n, NMIN);
     if (gg->vertices->n > NMAX)
-        quit("%d points found -- too many (should be <= %d)\n", gg->vertices->n, NMAX);
+        quit("%d points found -- too many (should be <= %d)", gg->vertices->n, NMAX);
     if (gg_verbose)
         fprintf(stderr, "  %d vertices after read\n", gg->vertices->n);
 
@@ -749,7 +873,7 @@ static gridgen* gridgen_create2(int nbdry, double xbdry[], double ybdry[], doubl
         vertlist_thin(gg->vertices, (gg->xmax - gg->xmin) / BIGDOUBLE, (gg->ymax - gg->ymin) / BIGDOUBLE);
 
         if (gg->vertices->n < NMIN)
-            quit("%d vertices after thinning -- too little (should be >= %d)\n", gg->vertices->n, NMIN);
+            quit("%d vertices after thinning -- too little (should be >= %d)", gg->vertices->n, NMIN);
 
         if (gg_verbose)
             fprintf(stderr, "  %d vertices after thinning\n", gg->vertices->n);
@@ -768,7 +892,7 @@ static gridgen* gridgen_create2(int nbdry, double xbdry[], double ybdry[], doubl
             fprintf(stderr, "  stage. You may try to skip the test by adding parameter \"checksimplepoly 0\"\n");
             fprintf(stderr, "  to your paremeter file. (If true, you should get a segfault during\n");
             fprintf(stderr, "  triangulation.)\n");
-            quit("%s: not a simple polyline\n", gg->datafname);
+            quit("%s: not a simple polyline", gg->datafname);
         }
         free(x);
         free(y);
@@ -857,7 +981,7 @@ static void get_rpoints(gridgen* gg)
 
         if (p->z != 0) {
             if (fabs(p->z) > 2.0)
-                quit("vertex %d (%.15g,%.15g): |beta| = %.15g > 2\n", i, p->x, p->y, fabs(p->z));
+                quit("vertex %d (%.15g,%.15g): |beta| = %.15g > 2", i, p->x, p->y, fabs(p->z));
             count++;
             sum += p->z;
         }
@@ -868,9 +992,9 @@ static void get_rpoints(gridgen* gg)
         fprintf(stderr, "  image region: %d corners\n", count);
 
     if (count < 3)
-        quit("less than 3 corners in the image region\n", count);
+        quit("less than 3 corners in the image region", count);
     if (fabs(fabs(sum) - 4.0) > EPS)
-        quit("sum of beta_i = %.15f != 4\n", sum);
+        quit("sum of beta_i = %.15f != 4", sum);
 
     /*
      * normalize sum of image region corner angles if a small discrepancy
@@ -1242,7 +1366,7 @@ static void F(double x[], double f[], void* p)
                 fprintf(stderr, "    -- changing \"newton 1\" to \"newton 0\" or vice versa in the parameter file;\n");
                 fprintf(stderr, "    -- slightly moving the boundary polygon vertices.\n");
             }
-            quit("F(): NaN detected\n");
+            quit("F(): NaN detected");
         }
     }
 }
@@ -1350,7 +1474,7 @@ static void find_sigmas(gridgen* gg, func F)
         if (gg_verbose)
             fprintf(stderr, "  saving sigmas to \"%s\":\n", gg->sigmafname);
         if ((int) fwrite(x, sizeof(double), n, gg->fsigma) != n)
-            quit("could not save sigmas to \"%s\": %s\n", gg->sigmafname, strerror(errno));
+            quit("could not save sigmas to \"%s\": %s", gg->sigmafname, strerror(errno));
         fclose(gg->fsigma);
         gg->fsigma = NULL;
     }
@@ -1432,6 +1556,8 @@ static void gridgen_destroy(gridgen* gg)
         free(gg->nqivertices);
         free(gg->qivertices);
     }
+    if (gg->proj != NULL)
+        free(gg->proj);
     free(gg);
 }
 
@@ -1451,7 +1577,7 @@ static void gridgen_check(gridgen* gg)
         sum += betas[i];
 
     if (fabs(sum + 2.0) > EPS)
-        quit("gridgen_check(): sum of betas = %.15f (should be 2)\n", sum);
+        quit("gridgen_check(): sum of betas = %.15f (should be 2)", sum);
 
     if (gg_verbose > 1)
         fprintf(stderr, "  sum of betas = 2.0 + %.3g\n", sum + 2.0);
@@ -1835,6 +1961,8 @@ static int z2q(gridgen* gg, zdouble z, zdouble zs[], double eps)
 
 static void output_point(gridgen* gg, double x, double y)
 {
+    if (gg->proj != NULL)
+        xy2ll(gg->proj, x, y, &x, &y);
 #if !defined(GRIDGEN_STANDALONE) && defined(HAVE_GRIDNODES_H)
     if (gg->gn == NULL) {
 #endif
@@ -1869,7 +1997,7 @@ static void map_point(gridgen* gg, zdouble z)
     int i;
 
     if (qid < 0)
-        quit("map_point(): could not map z = (%.10g,%.10g) to a quadrilateral\n", creal(z), cimag(z));
+        quit("map_point(): could not map z = (%.10g,%.10g) to a quadrilateral", creal(z), cimag(z));
 
     vids = qs[qid].vids;
 

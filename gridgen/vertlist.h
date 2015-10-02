@@ -63,6 +63,7 @@ void vertlist_read(vertlist* l, FILE* f);
 point* vertlist_topoint(vertlist* l);
 zdouble* vertlist_tozdouble(vertlist* l);
 void vertlist_toxy(vertlist* l, double** x, double** y);
+void vertlist_fromxy(vertlist* l, double x[], double y[]);
 void vertlist_process_phase1(vertlist* l);
 void vertlist_process_phase2(vertlist* l);
 delaunay* vertlist_triangulate(vertlist* l, FILE* log);

@@ -29,10 +29,11 @@ static void quit(char* format, ...)
 
     fflush(stdout);
 
-    fprintf(stderr, "error: ");
+    fprintf(stderr, "\n\n  gridgen: error: ");
     va_start(args, format);
     vfprintf(stderr, format, args);
     va_end(args);
+    fprintf(stderr, "\n\n");
     exit(1);
 }
 
@@ -71,9 +72,9 @@ static void parse_commandline(int argc, char* argv[], char** prmfname)
             case 'p':
                 i++;
                 if (i >= argc)
-                    quit("no file name found after (obsolete) -p\n");
+                    quit("no file name found after (obsolete) -p");
                 if (argv[i][0] == '-')
-                    quit("do not begin parameter file name with '-'\n");
+                    quit("do not begin parameter file name with '-'");
                 *prmfname = argv[i];
                 break;
             case 'v':

@@ -1,3 +1,10 @@
+v. 1.51.0, 2 October 2015
+        -- Added a new option: taking care of geographic coordinates. If there
+           is entry "geographic <lon0> <lat0>" in the parameter file then the
+           input coordinates are assumed to be geographic. They are internally
+           converted to stereographic projection with the South Pole at
+           (<lon0>, <lat0>) and converted back during the output of the grid
+           nodes.
 v. 1.50, 25 September 2015
         -- Minor changes to makefile.in: added $(LDFLAGS) for target
            `libgridgen.so' (thanks to @ocefpaf for pointing), and removed
@@ -7,7 +14,7 @@ v. 1.49, 31 July 2013
 v. 1.48, 1 May 2012
         -- A change in nan.h to distinguish between gcc and icc
 v. 1.47, 13 October 2010
-        -- Fixed a minor bug related to entry of "nppe" parameter -- see 
+        -- Fixed a minor bug related to entry of "nppe" parameter -- see
 	   http://code.google.com/p/gridgen-c/issues/detail?id=1 for details.
 v. 1.46, 18 February 2009
         -- Changed the license for compatibility with GPL. Added the file

@@ -352,6 +352,22 @@ void vertlist_toxy(vertlist* l, double** x, double** y)
     }
 }
 
+void vertlist_fromxy(vertlist* l, double x[], double y[])
+{
+    int n = l->n;
+    vertnode* now = l->first;
+    int i;
+
+    for (i = 0; i < n; ++i) {
+        point* p = &now->p;
+
+        p->x = x[i];
+        p->y = y[i];
+
+        now = now->next;
+    }
+}
+
 static double vertnode_angle_cos(vertnode* v)
 {
     point* p = &v->p;

@@ -60,9 +60,13 @@ static void quit(char* format, ...)
 {
     va_list args;
 
+    fflush(stdout);
+
+    fprintf(stderr, "\n\n  gridgen: swcr: error: ");
     va_start(args, format);
     vfprintf(stderr, format, args);
     va_end(args);
+    fprintf(stderr, "\n\n");
     exit(1);
 }
 
@@ -146,7 +150,7 @@ static void imtql2(int n, double* d, double* e, double* z)
                 goto continue_l;
 
             if (j == 30)
-                quit("error: imtql2(): number of iterations > 30\n");
+                quit("error: imtql2(): number of iterations > 30");
 
             j++;
 
@@ -441,7 +445,7 @@ static zdouble sc_integrate(swcr* sc, zdouble w0, int i0, zdouble w1, int i1, zd
     zdouble wmid = (w0 + w1) / 2.0;
 
     if (cabs(w0) > WABS_OK_MAX || cabs(w1) > WABS_OK_MAX)
-        quit("error: sc_integrate(): w outside unit disk\n");
+        quit("error: sc_integrate(): w outside unit disk");
 
     if (cabs(w0 - w1) == 0.0)
         return 0.0;

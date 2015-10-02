@@ -479,10 +479,11 @@ static void quit(char* format, ...)
 
     fflush(stdout);
 
-    fprintf(stderr, "error: ");
+    fprintf(stderr, "\n\n  gridgen: issimplepoly: error: ");
     va_start(args, format);
     vfprintf(stderr, format, args);
     va_end(args);
+    fprintf(stderr, "\n\n");
     exit(1);
 }
 
@@ -590,7 +591,7 @@ int main(int argc, char* argv[])
 
     f = fopen(fname, "r");
     if (f == NULL)
-        quit("could not open \"%s\" for read: %s\n", fname, strerror(errno));
+        quit("could not open \"%s\" for read: %s", fname, strerror(errno));
     xy_read(f, &n, &x, &y);
     if (verbose > 1)
         printf("  %d points\n", n);
