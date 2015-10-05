@@ -96,8 +96,10 @@ typedef struct {
  * parameters of the stereographic projection used
  */
 typedef struct {
+    /* North Pole position in geographic coordinates */
     double phi;
     double theta;
+    /* working stuff */
     double cosphi;
     double sinphi;
     double costheta;
@@ -383,10 +385,10 @@ void gridgen_printhelpprm(void)
     printf("       to map some points in difficult cases when the images of quadrilaterals\n");
     printf("       are strongly distorted.\n");
     printf("    10.Entry `geographic <lon0> <lat0>' tells gridgen that the input\n");
-    printf("       coordinates are given in (lon,lat). It will then internally transform\n");
-    printf("       the boundary to (x,y) using stereographic projection with the south pole\n");
-    printf("       placed at (<lon0>,<lat0>), generate grid, and transform grid node\n");
-    printf("       coordinates back to (lon,lat).\n");
+    printf("       coordinates are in (lon,lat). It will then internally transform the\n");
+    printf("       boundary polygon coordinates to (x,y) using stereographic projection\n");
+    printf("       with the South Pole at (<lon0>,<lat0>), generate grid, and transform\n");
+    printf("       grid node coordinates back to (lon,lat).\n");
     printf("  Acknowledgments. This program uses the following public code/algorithms:\n");
     printf("    1. CRDT algorithm by Tobin D. Driscoll and Stephen A. Vavasis -- for\n");
     printf("       conformal mapping.\n");

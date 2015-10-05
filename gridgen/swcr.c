@@ -335,6 +335,8 @@ static zdouble sc_prod(swcr* sc, zdouble w, int k, zdouble ws[])
         if (betas[i] != 0.0) {
             zdouble ztmp = 1.0 - w / ws[i];
 
+            if (cabs(ztmp) == 0.0)
+                continue;
             if (i == k)
                 ztmp /= cabs(ztmp);
             wsum += betas[i] * clog(ztmp);
