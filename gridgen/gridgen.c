@@ -96,10 +96,14 @@ typedef struct {
  * parameters of the stereographic projection used
  */
 typedef struct {
-    /* North Pole position in geographic coordinates */
+    /*
+     * North Pole position in geographic coordinates 
+     */
     double phi;
     double theta;
-    /* working stuff */
+    /*
+     * working stuff 
+     */
     double cosphi;
     double sinphi;
     double costheta;

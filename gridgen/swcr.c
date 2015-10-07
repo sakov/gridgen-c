@@ -471,7 +471,6 @@ static zdouble sc_integrate(swcr* sc, zdouble w0, int i0, zdouble w1, int i1, zd
  *           otherwhile
  * @param B Integral multiple
  * @param wi Prevertices [sc->n]
- * @param eps Allowable overshoot beyond unit disk
  * @return Image of `w'
  */
 zdouble sc_w2z(swcr* sc, zdouble w, int k, zdouble w0, zdouble z0, int k0, zdouble B, zdouble wi[])
@@ -527,8 +526,7 @@ static void f(zdouble z, zdouble f[], zdouble f1[], void* p)
 zdouble sc_z2w(swcr* sc, zdouble z, zdouble z1, zdouble w1, zdouble z2, zdouble w2, zdouble z0, zdouble w0, zdouble B, zdouble wi[], double eps, int* status)
 {
     int count = 0;
-    int ok = 1;
-    zdouble w = w2;
+    zdouble w = 999.0;
 
     *status = 0;
 
@@ -537,52 +535,46 @@ zdouble sc_z2w(swcr* sc, zdouble z, zdouble z1, zdouble w1, zdouble z2, zdouble 
      * function structure may be too fine, or because of the branch cuts
      * of complex logs starting from prevertices w_i. 
      */
-    if (cabs(w1 - w2) > eps) {
-        while (cabs(w1 - w2) > eps) {
-            double wabs;
+    while (cabs(w1 - w2) > eps) {
+        double wabs;
 
-            w = (w2 * (z - z1) - w1 * (z - z2)) / (z2 - z1);
-            wabs = cabs(w);
+        w = (w2 * (z - z1) - w1 * (z - z2)) / (z2 - z1);
+        wabs = cabs(w);
 
-            if (wabs > WABS_NEWTON_MAX || count >= NEWTON_NITER_MAX) {
-                ok = 0;
-                break;
-            }
-            /*
-             * My understanding is that w(z) is analytical inside unit disk, 
-             * has branch points in vertice images on the unit
-             * circumcircle and branch cuts from these to infinity. Hence,
-             * if w shoots outside unit disk, it may be reasonably used in
-             * some circumstances but not others. Therefore, we allow
-             * overshoots by making WABS_OK_MAX > 1. BUT, because of that,
-             * if unlucky, the secant method may converge to some value
-             * outside the unit disk. Such values will be discarded and ODE
-             * method tried. 
-             */
-            else if (wabs > WABS_OK_MAX)
-                w /= wabs;
-            w1 = w2;
-            z1 = z2;
-            w2 = w;
-            z2 = sc_w2z(sc, w, -1, w0, z0, -1, B, wi);
-            count++;
+        if (wabs > WABS_NEWTON_MAX || count >= NEWTON_NITER_MAX) {
+            *status = 1;
+            break;
         }
-
         /*
-         * (see the comment above) 
+         * My understanding is that w(z) is analytical inside unit disk, 
+         * has branch points in vertice images on the unit
+         * circumcircle and branch cuts from these to infinity. Hence,
+         * if w shoots outside unit disk, it may be reasonably used in
+         * some circumstances but not others. Therefore, we allow
+         * overshoots by making WABS_OK_MAX > 1. BUT, because of that,
+         * if unlucky, the secant method may converge to some value
+         * outside the unit disk. Such values will be discarded and ODE
+         * method tried. 
          */
-        if (cabs(w) > 1.0 + eps)
-            ok = 0;
+        else if (wabs > WABS_OK_MAX)
+            w /= wabs;
+        w1 = w2;
+        z1 = z2;
+        w2 = w;
+        z2 = sc_w2z(sc, w, -1, w0, z0, -1, B, wi);
+        count++;
+    }
 
-        if (ok) {
-            zdouble w = (w2 * (z - z1) - w1 * (z - z2)) / (z2 - z1);
-
-            if (cabs(w - w2) < eps)
-                return w;
-            return w2;
+    /*
+     * (see the comment above) 
+     */
+    if (*status == 0) {
+        if (abs(w) > 1.0 + eps)
+            *status = 1;
+        else {
+            w = (w2 * (z - z1) - w1 * (z - z2)) / (z2 - z1);
+            return (cabs(w - w2) < eps) ? w : w2;
         }
-
-        *status = 1;
     }
 
     /*
