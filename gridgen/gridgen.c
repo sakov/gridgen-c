@@ -588,7 +588,9 @@ static gridgen* gridgen_init(void)
     return gg;
 }
 
-static void ll2xy(sgproj * proj, double lon, double lat, double* x, double* y)
+/* http://mathworld.wolfram.com/StereographicProjection.html, (1-3)
+ */
+static void ll2xy(sgproj* proj, double lon, double lat, double* x, double* y)
 {
     double phi = lon * DEG2RAD;
     double theta = lat * DEG2RAD;
@@ -600,7 +602,9 @@ static void ll2xy(sgproj * proj, double lon, double lat, double* x, double* y)
     *y = k * (sintheta * proj->costheta - costheta * proj->sintheta * cos(phi - proj->phi));
 }
 
-static void xy2ll(sgproj * proj, double x, double y, double* lon, double* lat)
+/* http://mathworld.wolfram.com/StereographicProjection.html, (4-7)
+ */
+static void xy2ll(sgproj* proj, double x, double y, double* lon, double* lat)
 {
     double rho = hypot(x, y);
     double c = 2.0 * atan(rho / 2.0);

@@ -152,5 +152,5 @@ configclean:
 distclean: clean configclean
 
 indent:
-	indent -T FILE -T swcr -T vertnode -T vertlist -T edge -T quadrilateral -T gridgen -T odestruct -T calcstruct -T zdouble -T point -T delaunay -T istack -T triangle -T DIRECTION -T endpoint -T endpointtqueue -T slseg -T segnode -T sweepline  -T DIRECTION -T VISIT -T SIBLING_ORDER -T NODETYPE -T ht_bucket -T hashtable main.c $(SRC) $(HEADERS)
+	indent -T FILE -T swcr -T vertnode -T vertlist -T edge -T quadrilateral -T gridgen -T odestruct -T calcstruct -T zdouble -T point -T delaunay -T istack -T triangle -T DIRECTION -T endpoint -T endpointtqueue -T slseg -T segnode -T sweepline  -T DIRECTION -T VISIT -T SIBLING_ORDER -T NODETYPE -T ht_bucket -T hashtable -T sgproj main.c $(SRC) $(HEADERS)
 	rm -f *~
