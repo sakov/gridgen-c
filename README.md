@@ -1,4 +1,4 @@
-##gridgen
+## gridgen ##
 
 **gridgen** is a C code that provides a command line utility for non-interactive generation of multi-corner 
 quasi-orthogonal grids inside simply connected polygonal regions. It is based on the 
@@ -22,4 +22,5 @@ suite for interactive grid generation for ROMS and GETM - and [pygridgen](https:
 Checkout **gridgen** by running `git clone https://github.com/sakov/gridgen-c`
 or `svn checkout https://github.com/sakov/gridgen-c`.
 
-![Example grid: Fitzroy estuary](fitzroy.png)
+Example grid by gridgen:
+![](fitzroy.png)
