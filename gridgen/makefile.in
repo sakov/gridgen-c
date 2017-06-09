@@ -79,10 +79,12 @@ endif
 LIBSRC=$(SRC) $(COMPLEXSRC)
 
 LIBOBJS = $(LIBSRC:.c=.o)
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
 SHLIBOBJS = $(LIBSRC:.c=.t)
 %.t: %.c
-	$(CC) $(CFLAGS) -fPIC -c $*.c -o $*.t
+	$(CC) $(CFLAGS) -fPIC -c $< -o $@
 
 all: gridgen
 	@if [ ! -f libgridgen.a ] ; then \
