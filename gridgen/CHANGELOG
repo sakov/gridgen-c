@@ -1,3 +1,6 @@
+v. 1.51.5, 15 December 2017
+        -- A seemingly minor change in issimplepoly.c that obviously makes a
+           difference. Purely empirical at the moment, above my comprehension.
 v. 1.51.4, 9 July 2017
         -- Some minor portability related changes in hash.[ch]
         -- A minor change in makefile

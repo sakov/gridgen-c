@@ -255,9 +255,9 @@ static int slseg_compare(void* p1, void* p2)
     else
         y2 = (xy21[1] * (xy22[0] - x) + xy22[1] * (x - xy21[0])) / (xy22[0] - xy21[0]);
 
-    if (y1 > y2)
-        return 1;
     if (y1 < y2)
+        return 1;
+    if (y1 > y2)
         return -1;
 
     if (s1->eid > s2->eid)
