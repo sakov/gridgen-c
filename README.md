@@ -19,8 +19,7 @@ it produces.
 There are a number of front-ends to **gridgen**. Two of them are [octant](https://github.com/hetland/octant) - a python 
 suite for interactive grid generation for ROMS and GETM - and [pygridgen](https://github.com/hetland/pygridgen).
 
-Checkout **gridgen** by running `git clone https://github.com/sakov/gridgen-c`
-or `svn checkout https://github.com/sakov/gridgen-c`.
+Checkout **gridgen** by running `git clone https://github.com/sakov/gridgen-c`.
 
 Example grid by gridgen:
 ![](fitzroy.png)
