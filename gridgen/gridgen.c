@@ -2177,6 +2177,7 @@ static void map_quadrilaterals(gridgen* gg)
     /*
      * storing the found images
      */
+    assert(nq > 0);
     gg->nqivertices = calloc(nq, sizeof(int));
     gg->qivertices = malloc(nq * gg->nppq * sizeof(zdouble));
     for (i = 0; i < nq; ++i) {

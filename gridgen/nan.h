@@ -12,29 +12,28 @@
  * Description:    Should cover machines with 64 bit doubles or other machines
  *                 with GCC
  *
- * Revisions:      None
+ * Revisions:      10 July 2026: a more robust version
  *
  *****************************************************************************/
 
 #if !defined(_NAN_H)
 #define _NAN_H
 
-#if defined(__GNUC__) && !defined(__INTEL_COMPILER)
+#include <math.h>
 
-static const double NaN = 0.0 / 0.0;
+#if defined(NAN)
+#define NaN NAN
 
-#elif defined(_WIN32)
+#elif defined(__GNUC__) || defined(__clang__)
+#define NaN __builtin_nan("")
 
-static unsigned _int64 lNaN = ((unsigned _int64) 1 << 63) - 1;
-
-#define NaN (*(double*)&lNaN)
+#elif defined(_MSC_VER)
+#include <float.h>
+#define NaN (_NAN)
 
 #else
-
-static const long long lNaN = ((unsigned long long) 1 << 63) - 1;
-
-#define NaN (*(double*)&lNaN)
+#define NaN (0.0 / 0.0)
 
 #endif
 
-#endif
+#endif /* _NAN_H */
